@@ -38,3 +38,6 @@ apps/web/dist/
 worktrees/
 .agents/worktrees/
 .typert-*/
+
+# Local standalone toolchain (owner vhiep, 2026-08-19) — never commit; re-create on new machines per START_HERE.md
+.portable/

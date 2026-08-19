@@ -190,3 +190,7 @@ Direct dependencies of the `pyproject.toml` manifests, plus `uv` as the developm
 ## First-party native packages
 
 `@deepseek-ai/node-addon-landlock-run` (and its platform packages) is built and released from this repository under BSD 3-Clause. It is listed here for completeness; it is first-party, not third-party.
+
+## Local machine appendix (2026-08-19) — NOT generated, local only
+
+This appendix is a local-only note, not part of the generated notices. The standalone-toolchain overlay (`.portable/` portable Node.js + pnpm, `dsh.bat` launcher, `.env` API credentials) is described in the README's "Local machine overlay" section. `.portable/` is local runtime tooling, not a dependency of published packages, so it is intentionally absent from the license tables above. Caveat: `scripts/gen-third-party-notices.ts` regenerates this file from workspace manifests — running it will drop this appendix; re-add it afterward if needed.
