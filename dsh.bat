@@ -51,13 +51,16 @@ cls
 echo ============================================
 echo   DeepSeek Harness - chọn chế độ chạy
 echo ============================================
-echo   [1] Web UI        - mở giao diện web trong trình duyệt
-echo   [2] Headless      - chạy agent một lần: nhập yêu cầu, xem kết quả
-echo   [3] ACP server    - máy chủ tự động hóa qua JSON-RPC stdio
-echo   [4] Cordis demo   - demo agent tự tham chiếu chính nó
-echo   [5] Rebuild       - biên dịch lại thư viện + giao diện web
-echo   [6] Check update  - kiểm tra cập nhật mới từ DeepSeek
+echo   [1] Web UI        - dùng AI qua trình duyệt (dùng hằng ngày)
+echo   [2] Headless      - hỏi AI một câu nhanh ngay trong cửa sổ này
+echo   [3] ACP server    - cho phần mềm khác gọi AI (nâng cao, không cần)
+echo   [4] Cordis demo   - xem demo hệ thống plugin (để học, không cần)
+echo   [5] Rebuild       - biên dịch lại sau khi vừa cập nhật code
+echo   [6] Check update  - kiểm tra DeepSeek có bản mới không
 echo   [0] Exit          - thoát
+echo ============================================
+echo   Gợi ý: mở lên chọn 1 để dùng AI; chọn 6 khi muốn
+echo   xem có bản cập nhật; chọn 5 sau khi vừa cập nhật xong.
 echo ============================================
 set /p CHOICE="Lựa chọn của bạn: "
 
