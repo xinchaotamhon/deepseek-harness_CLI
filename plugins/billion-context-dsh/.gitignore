@@ -1,0 +1,13 @@
+node_modules/
+dist/
+*.log
+.DS_Store
+
+# Worktrees (local development only, never push)
+worktrees/
+
+# Scratch / planning files (local only, never push)
+scratch-*
+docs/fix-issue-*-plan.md
+docs/video-script.md
+.npm-cache/
