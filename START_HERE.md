@@ -45,8 +45,10 @@ folder (`.portable/` + `node_modules/` + built artifacts).
 
 ## 3. Current state (verified 2026-08-19)
 
-- **Build:** `pnpm run build` ✅ (host lib + client lib + web dist). `pnpm run typecheck` ✅.
-- **API:** working. Headless run returns answers (tested: `Reply with exactly: OK` → `OK`).
+- **Code level:** local `master` = upstream DeepSeek **rc.7** (`99f6f02fec`) **merged** with the
+  local overlay commit (`88597debf4`) — merge commit `278f1462a1`, no conflicts (2026-08-19).
+- **Build:** `pnpm run build` ✅ on rc.7 (host lib + client lib + web dist). `pnpm run typecheck` ✅ (exit 0).
+- **API:** working on rc.7. Headless run returns answers (tested: `Reply with exactly: OK` → `OK`).
 - **Auth history (do not repeat the mistake):** a stale **User-level Windows env var
   `DEEPSEEK_API_KEY`** (old key ending `****3819`) used to override the correct `.env`
   key (ending `****a9bc`) — `app-boot` prefers ambient environment over `.env`
@@ -194,10 +196,13 @@ scripts/           repo tooling + gates
 
 - `origin` points to **upstream DeepSeek** (`deepseek-ai/deepseek-harness`) — the owner
   does not have write access and must **never push there**.
-- The owner pushes to their **own GitHub repository** (fork or new repo). Procedure:
-  1. Create the repo on GitHub (fork of `deepseek-ai/deepseek-harness`, or empty repo).
-  2. `git remote add mine https://github.com/<owner>/<repo>.git`
-  3. `git push -u mine master`  (branch `master`, local — do NOT push to origin)
-- What gets pushed: the 8 modified docs (overlay sections), `dsh.bat`, `START_HERE.md`.
-  What stays local: `.env` and `.portable/` (both gitignored — never pushed).
+- The owner's GitHub repo: **`https://github.com/xinchaotamhon/deepseek-harness_CLI`**
+  (fork of deepseek-ai; `master` there already tracks upstream). Local `master` is a
+  fast-forward of it (upstream rc.7 + local overlay commit + merge commit), so:
+  ```sh
+  git push https://github.com/xinchaotamhon/deepseek-harness_CLI.git master
+  # or add a named remote first: git remote add mine <url> && git push -u mine master
+  ```
+- What gets pushed: upstream rc.7 + the overlay commit (`dsh.bat`, `START_HERE.md`,
+  modified docs, `.gitignore`). What stays local: `.env` and `.portable/` (gitignored — never pushed).
 - After pushing, clone `mine` on new machines and follow "Setup on a new machine" (section 4).
