@@ -1,6 +1,8 @@
 @echo off
 setlocal enabledelayedexpansion
-chcp 65001 >nul
+rem --- Guarantee system commands (chcp, etc.) are reachable ------
+set "PATH=%SystemRoot%\System32;%SystemRoot%;%PATH%"
+chcp 65001 >nul 2>&1
 title DeepSeek Harness (dsh) - Local launcher
 
 rem ============================================================
@@ -27,8 +29,9 @@ rem --- Put the portable toolchain first on PATH -----------------
 set "PATH=%PORTABLE_NODE%;%ROOT%.portable;%PATH%"
 
 rem --- Check for upstream (DeepSeek) updates --------------------
-call :check_update
+goto check_update
 
+:first_run
 rem --- First-run: build artifacts (docs require pnpm run build) --
 if not exist "%ROOT%apps\web\dist" (
     echo [dsh] First run detected: building package + web artifacts...
@@ -41,21 +44,22 @@ if not exist "%ROOT%apps\web\dist" (
     )
     echo [dsh] Build complete.
 )
+goto menu
 
 :menu
 cls
 echo ============================================
-echo   DeepSeek Harness - choose an entry mode
+echo   DeepSeek Harness - chọn chế độ chạy
 echo ============================================
-echo   [1] Web UI        - open the agent UI in your browser
-echo   [2] Headless      - one-shot agent, type a task, get the answer
-echo   [3] ACP server    - automation server over JSON-RPC stdio
-echo   [4] Cordis demo   - self-referential agent demo
-echo   [5] Rebuild       - rebuild lib + web artifacts
-echo   [6] Check update  - re-check DeepSeek upstream for new commits
-echo   [0] Exit
+echo   [1] Web UI        - mở giao diện web trong trình duyệt
+echo   [2] Headless      - chạy agent một lần: nhập yêu cầu, xem kết quả
+echo   [3] ACP server    - máy chủ tự động hóa qua JSON-RPC stdio
+echo   [4] Cordis demo   - demo agent tự tham chiếu chính nó
+echo   [5] Rebuild       - biên dịch lại thư viện + giao diện web
+echo   [6] Check update  - kiểm tra cập nhật mới từ DeepSeek
+echo   [0] Exit          - thoát
 echo ============================================
-set /p CHOICE="Your choice: "
+set /p CHOICE="Lựa chọn của bạn: "
 
 if "%CHOICE%"=="1" goto web
 if "%CHOICE%"=="2" goto headless
@@ -75,15 +79,15 @@ rem ============================================================
 echo [dsh] Checking for new commits from DeepSeek upstream...
 git fetch origin --quiet 2>nul
 if errorlevel 1 (
-    echo [dsh] Could not reach GitHub (offline?). Skipping update check.
-    goto :update_done
+    echo [dsh] Could not reach GitHub - offline? Skipping update check.
+    goto first_run
 )
 set "UPSTREAM_AHEAD=0"
 for /f "delims=" %%i in ('git rev-list --count HEAD..origin/master 2^>nul') do set "UPSTREAM_AHEAD=%%i"
 if not defined UPSTREAM_AHEAD set "UPSTREAM_AHEAD=0"
 if "%UPSTREAM_AHEAD%"=="0" (
     echo [dsh] Up to date with DeepSeek upstream.
-    goto :update_done
+    goto first_run
 )
 echo.
 echo ============================================================
@@ -93,11 +97,11 @@ echo ============================================================
 git log --oneline -5 origin/master
 echo.
 choice /C YN /M "Merge now? (Y=merge + reinstall + rebuild / N=skip)"
-if errorlevel 2 goto :update_done
+if errorlevel 2 goto first_run
 echo [dsh] Merging upstream...
 git merge origin/master
 if errorlevel 1 (
-    echo [dsh] Merge FAILED (likely conflicts). Aborting to keep the repo clean.
+    echo [dsh] Merge FAILED - likely conflicts. Aborting to keep the repo clean.
     echo [dsh] Resolve manually or ask an AI to handle the merge, then re-run this file.
     git merge --abort
     goto :update_done
@@ -117,7 +121,7 @@ echo [dsh] Update merged and rebuilt successfully.
 :update_done
 echo.
 pause
-goto menu
+goto first_run
 
 :web
 echo Starting Web UI... press Ctrl+C to stop.
