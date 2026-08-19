@@ -206,3 +206,80 @@ scripts/           repo tooling + gates
 - What gets pushed: upstream rc.7 + the overlay commit (`dsh.bat`, `START_HERE.md`,
   modified docs, `.gitignore`). What stays local: `.env` and `.portable/` (gitignored — never pushed).
 - After pushing, clone `mine` on new machines and follow "Setup on a new machine" (section 4).
+
+## 11. Plugins: dsh-context-doctor + billion-context-dsh (2026-08-19)
+
+Two third-party dsh plugins are **vendored into this repo** via `git subtree`
+(so 1 push carries everything) and **applied to the local `web` profile as
+links into this folder** (so the applied code IS the repo code, no external copy).
+
+| Plugin | Vendored at | Owner's fork (upstream source) | Purpose |
+|---|---|---|---|
+| dsh-context-doctor | `plugins/dsh-context-doctor/` | https://github.com/xinchaotamhon/dsh-context-doctor_plugin-webui (Zhenyu98 upstream) | Read-only context audit: `context_audit` tool + ring panel in Web UI |
+| billion-context-dsh | `plugins/billion-context-dsh/` | https://github.com/xinchaotamhon/billion-context-dsh_plugin-backend (Tyan66666 upstream) | ACP model-driven compaction backend: `compress` / `decompress` / `search_context` / `acp_status` + nudge |
+
+### How they are applied (do not re-install blindly)
+
+```sh
+# from repo root — local-path add: pnpm installs a LINK into the profile,
+# and dsh plugin reconcile auto-appends the bundle to the layer stack
+dsh plugin --profile web add ./plugins/dsh-context-doctor
+dsh plugin --profile web add ./plugins/billion-context-dsh
+```
+
+Effect on `~/.dsh/profiles/web/package.json`: `dependencies` get
+`link:D:/mydata/new-git-3/deepseek-harness_CLI/plugins/<name>` and
+`dsh.profile.bundles` becomes
+`[dsh-base, dsh-web-app, dsh-context-doctor, billion-context-dsh]`.
+`compaction-basic` ships already `disabled: true` on rc.7 (no manual patch needed).
+
+### Updating a plugin from the owner's fork
+
+The owner forked both upstreams so each plugin stays independent and can be
+upgraded on demand. To pull a newer upstream release through the fork:
+
+```sh
+git subtree pull --prefix plugins/dsh-context-doctor \
+  https://github.com/xinchaotamhon/dsh-context-doctor_plugin-webui.git main --squash
+git subtree pull --prefix plugins/billion-context-dsh \
+  https://github.com/xinchaotamhon/billion-context-dsh_plugin-backend.git main --squash
+```
+
+After a billion-context-dsh update: it ships source-only (dist is gitignored
+upstream) — rebuild and force-add dist so clones never need a build:
+
+```sh
+cd plugins/billion-context-dsh
+npm install && npm run build && npm test   # 152 tests
+git add -f plugins/billion-context-dsh/dist
+```
+
+### Smoke verification
+
+```sh
+pwsh -NoProfile -ExecutionPolicy Bypass -File scripts\plugin-smoke.ps1   # 6 gates
+```
+
+Gates (CLOVER-style: cumulative, expected/observed/verdict):
+1. `plugins.bundles-declared` — both bundles in profile layer stack
+2. `plugins.links-into-repo` — profile links resolve into this repo folder
+3. `plugins.compaction-acp-mounted` — dump-config shows `compaction-acp` + `name: billion-context-dsh`
+4. `plugins.context-doctor-mounted` — dump-config shows `id: context-doctor`
+5. `plugins.compaction-basic-disabled` — no dual compaction backend conflict
+6. `plugins.dist-committed` — billion dist tracked (new machines need no build)
+
+Runtime verification (after `dsh --profile web` restart, in a session):
+`acp_status` returns CONTEXT BREAKDOWN; `compress`/`decompress`/`search_context`
+work; nudge appears ≥70% usage.
+
+### Important notes
+
+- **The profile references this repo by ABSOLUTE path.** On a new machine:
+  clone the repo, run the two `dsh plugin --profile web add` commands from the
+  repo root, restart dsh. The vendored code + built dist are already in git, so
+  no rebuild is needed (except after plugin updates, see above).
+- **billion-context-dsh is beta (v0.2.6).** Rollback: delete the two dependency
+  lines from `~/.dsh/profiles/web/package.json`, `pnpm install` there, restart.
+  Its thresholds: nudge 70%, emergency 85% (original basic: 75%/95%).
+- Plugin smoke gates are the ONLY local smoke for now; the repo has no
+  CLOVER-style gate registry yet (that lives in `D:\mydata\my-project\CLOVER`).
